@@ -1,0 +1,38 @@
+# Projet
+
+Créer et implémenter sur un dataset une nouvelle méthode de RAG en innovant au moins sur la méthode de parsing. 
+
+# Livrables
+
+- Github documenté
+- Rapport final + ppt
+
+# Roadmap
+
+1. Revue scientifique - 4sem 
+    1. LLM, RAG, parsing embedding, reranking, generation
+    2. Synthèse de l’état de l’art 
+2. Construction d’un dataset - 2sem 
+    1. opensource 
+    2. différentes sources de données 
+    3. différents types de données (images, pdf, xlsx) 
+3. Définition de métriques d’évaluation - 2sem
+    1. efficacité du RAG 
+    2. évaluation de la méthode de parsing 
+4. Expérimentation de RAGs - 4sem 
+    1. sur le dataset créé 
+    2. tester des méthodes de parsing 
+    3. évaluation des performances par rapport aux métriques d’évaluation 
+5. Développement d’un RAG - 4 à 6 sem 
+    1. mise au point d’une méthode de parsing 
+    2. évaluation des performances par rapport aux métriques d’évaluation 
+    3. front avec chat bot ?
+
+# Documents
+
+- Connaissance globale LLM https://datascientest.com/large-language-models-tout-savoir
+- Détail sur le fonctionnement des Transformers https://arxiv.org/pdf/1706.03762
+- Présentation RAG https://arxiv.org/pdf/2410.12837
+- Discussion sur le chunking de documents https://medium.com/@alexisperrier/dans-le-rag-limportant-c-est-le-chunk-0d541b4f4bbe
+- Cours sur l'utilisation de modèles https://huggingface.co/learn/llm-course/chapter1/1
+- Prise en main LangChain https://docs.langchain.com/oss/python/langchain/overview
