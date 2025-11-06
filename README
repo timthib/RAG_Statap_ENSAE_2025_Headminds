@@ -30,9 +30,16 @@ Créer et implémenter sur un dataset une nouvelle méthode de RAG en innovant a
 
 # Documents
 
+## Veille scientifique 
+HF : https://huggingface.co/papers/trending  #replaced paperswithcode
+Arxiv : https://arxiv.org
+Google scholar
+
 - Connaissance globale LLM https://datascientest.com/large-language-models-tout-savoir
 - Détail sur le fonctionnement des Transformers https://arxiv.org/pdf/1706.03762
 - Présentation RAG https://arxiv.org/pdf/2410.12837
 - Discussion sur le chunking de documents https://medium.com/@alexisperrier/dans-le-rag-limportant-c-est-le-chunk-0d541b4f4bbe
 - Cours sur l'utilisation de modèles https://huggingface.co/learn/llm-course/chapter1/1
 - Prise en main LangChain https://docs.langchain.com/oss/python/langchain/overview
+
+
