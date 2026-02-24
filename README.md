@@ -86,6 +86,21 @@ pip install -r requirements.txt
 
 **Note :** Si votre modèle sort des tableaux spécifiquement au format **LaTeX** (nécessitant une conversion), vous pourriez avoir besoin d'installer [LaTeXML](https://math.nist.gov/~BMiller/LaTeXML/) séparément. Pour une sortie Markdown/HTML standard de Docling, les dépendances ci-dessus sont suffisantes.
 
+> **Remarque pour les utilisateurs d’Onyxia**  
+> Si vous exécutez les scripts sur Onyxia, vous pouvez rencontrer l’erreur suivante lorsque vous essayer de lancer l'évaluation (expliquée ci-dessous):  
+> 
+> ```
+> ImportError: libGL.so.1: cannot open shared object file: No such file or directory
+> ```  
+> 
+> Cela se produit parce que OpenCV nécessite la bibliothèque système `libGL`.  
+> Pour résoudre ce problème, exécutez la commande suivante avant de lancer l’évaluation :  
+> 
+> ```bash
+> sudo apt-get update && sudo apt-get install -y libgl1
+> ```  
+
+
 ---
 
 ## Données nécessaires
