@@ -100,20 +100,25 @@ Assurez-vous que votre dossier de travail ressemble à ceci avant de lancer l'é
 
 ```text
 RAG_Statap_ENSAE_2025_Headminds/
-├── pdf_validation.py           # Script principal d'évaluation
 ├── configs/
 │   └── end2end.yaml            # Fichier de configuration (à vérifier)
 ├── dataset/                    # Code de chargement des données
+├── images/ *                   # [À AJOUTER] Annotations de vérité terrain (GT)
 ├── metrics/                    # Code de calcul des métriques
+├── pdfs/ *                     # [À AJOUTER] PDFs du benchmark
+├── registry/
+├── result/ *                   # Résultats de l'évaluation (JSONs)
+│   └── docling/ *              # [À AJOUTER] Fichiers .md générés par Docling
+│   └── docling_quick_match_...
+│   └── docling_quick_match_...
+│   └── ...
+├── task/
 ├── tools/
 │   └── generate_result_tables.ipynb  # Notebook pour visualiser les résultats
-├── data/ *                     # [À CRÉER] Dossier pour les données brutes
-│   ├── OmniDocBench.json       # [À AJOUTER] Annotations de vérité terrain (GT)
-│   ├── images/                 # [À AJOUTER] Images du benchmark
-│   └── pdfs/                   # [À AJOUTER] PDFs du benchmark
-├── predictions/ *              # [À CRÉER] Dossier pour les résultats Docling
-│   └── docling/                # [À AJOUTER] Fichiers .md générés par Docling
-├── results/                    # Résultats de l'évaluation (JSONs)
+├── utils/
+├── gitignore           
+├── OmniDocBench.json           # [À AJOUTER] Annotations de vérité terrain (GT)
+├── pdf_validation.py           # Script principal d'évaluation
 ├── requirements.txt
 └── README.md
 ```
@@ -131,10 +136,10 @@ dataset:
   dataset_name: end2end_dataset
   ground_truth:
     # Chemin vers le fichier JSON de vérité terrain (OmniDocBench.json)
-    data_path: ./data/OmniDocBench.json
+    data_path: ./OmniDocBench.json
   prediction:
     # Chemin vers le dossier contenant les fichiers .md de Docling
-    data_path: ./predictions/docling
+    data_path: ./result/docling
   match_method: quick_match
 ```
 
