@@ -1,0 +1,10 @@
+pyyaml
+Levenshtein
+tqdm
+loguru
+func-timeout
+pylatexenc
+beautifulsoup4
+scipy
+numpy
+evaluate
