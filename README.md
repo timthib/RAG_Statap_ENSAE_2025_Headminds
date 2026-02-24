@@ -30,7 +30,7 @@ Créer et implémenter sur un dataset une nouvelle méthode de RAG en innovant a
 
 # Évaluation de Docling sur OmniDocBench
 
-Ce dépôt contient un environnement d'évaluation autonome et léger pour évaluer les performances du modèle **Docling** sur la benchmark **OmniDocBench**. Il inclut les scripts d'évaluation, les configurations et les dépendances nécessaires pour lancer une validation de bout en bout.
+Cette partie contient un environnement d'évaluation autonome et léger pour évaluer les performances du modèle Docling sur la benchmark OmniDocBench. Il inclut les scripts d'évaluation, les configurations et les dépendances nécessaires pour lancer une validation de bout en bout.
 
 ## 📋 Table des matières
 
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 
 ## Données nécessaires
 
-⚠️ **Important :** Les fichiers de données brutes (images, PDFs, annotations OmniDocBench et les fichiers markdown générés par Docling) ne sont pas inclus dans ce dépôt GitHub en raison de leur taille importante.
+ **Important :** Les fichiers de données brutes (images, PDFs, annotations OmniDocBench et les fichiers markdown générés par Docling) ne sont pas inclus dans ce dépôt GitHub en raison de leur taille importante.
 
 Pour faire fonctionner le script d'évaluation, vous devez télécharger ces données et les placer dans le dossier du projet.
 
@@ -103,12 +103,12 @@ RAG_Statap_ENSAE_2025_Headminds/
 ├── configs/
 │   └── end2end.yaml            # Fichier de configuration (à vérifier)
 ├── dataset/                    # Code de chargement des données
-├── images/ *                   # [À AJOUTER] Annotations de vérité terrain (GT)
+├── images/ *                   # (À AJOUTER) Annotations de vérité terrain (GT)
 ├── metrics/                    # Code de calcul des métriques
-├── pdfs/ *                     # [À AJOUTER] PDFs du benchmark
+├── pdfs/ *                     # (À AJOUTER) PDFs du benchmark
 ├── registry/
 ├── result/ *                   # Résultats de l'évaluation (JSONs)
-│   └── docling/ *              # [À AJOUTER] Fichiers .md générés par Docling
+│   └── docling/ *              # (À AJOUTER Fichiers .md générés par Docling
 │   └── docling_quick_match_...
 │   └── docling_quick_match_...
 │   └── ...
@@ -116,11 +116,11 @@ RAG_Statap_ENSAE_2025_Headminds/
 ├── tools/
 │   └── generate_result_tables.ipynb  # Notebook pour visualiser les résultats
 ├── utils/
-├── gitignore           
+├── gitignore                   # Fichier .gitignore pour exclure les fichiers volumineux ou temporaires
 ├── OmniDocBench.json           # [À AJOUTER] Annotations de vérité terrain (GT)
 ├── pdf_validation.py           # Script principal d'évaluation
-├── requirements.txt
-└── README.md
+├── requirements.txt            # Liste des dépendances Python nécessaires pour l'environnement
+└── README.md                   # Documentation et instructions pour installer, configurer et lancer l’évaluation
 ```
 
 ---
