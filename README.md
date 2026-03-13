@@ -1,205 +1,269 @@
-# Projet
+# StatParse: A Statistical Document Parsing Pipeline for RAG Systems
 
-Créer et implémenter sur un dataset une nouvelle méthode de RAG en innovant au moins sur la méthode de parsing. 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-# Livrables
+## Overview
 
-- Github documenté
-- Rapport final + ppt
+**StatParse** is a lightweight, fully statistical document parsing pipeline that converts PDF documents into structured Markdown — without relying on deep learning or GPU resources.
 
-# Roadmap
+The core idea: at every level of document structure (characters → words → lines → blocks → columns), spatial relationships follow **statistical distributions**. By modeling these distributions explicitly (using kernel density estimation, Gaussian mixture models, and adaptive thresholding), we can segment and classify document elements with **zero training data** and **zero GPU compute**.
 
-1. Revue scientifique - 4sem 
-    1. LLM, RAG, parsing embedding, reranking, generation
-    2. Synthèse de l’état de l’art 
-2. Construction d’un dataset - 2sem 
-    1. opensource 
-    2. différentes sources de données 
-    3. différents types de données (images, pdf, xlsx) 
-3. Définition de métriques d’évaluation - 2sem
-    1. efficacité du RAG 
-    2. évaluation de la méthode de parsing 
-4. Expérimentation de RAGs - 4sem 
-    1. sur le dataset créé 
-    2. tester des méthodes de parsing 
-    3. évaluation des performances par rapport aux métriques d’évaluation 
-5. Développement d’un RAG - 4 à 6 sem 
-    1. mise au point d’une méthode de parsing 
-    2. évaluation des performances par rapport aux métriques d’évaluation 
-    3. front avec chat bot ?
+StatParse is designed to plug into Retrieval-Augmented Generation (RAG) systems as the parsing front-end.
 
-# Évaluation de Docling sur OmniDocBench
+## Motivation
 
-Cette partie contient un environnement d'évaluation autonome et léger pour évaluer les performances du modèle Docling sur la benchmark OmniDocBench. Il inclut les scripts d'évaluation, les configurations et les dépendances nécessaires pour lancer une validation de bout en bout.
+Modern document parsing methods (LayoutParser, Docling, DiT) achieve high accuracy but depend on large pretrained models. We explore how far **classical statistics and computer vision** can go, producing an interpretable, reproducible, and resource-free alternative suitable for constrained environments.
 
-## 📋 Table des matières
+This is a research project. We benchmark StatParse against [Docling](https://github.com/DS4SD/docling) (our baseline) on standard document layout analysis benchmarks, then integrate both into a RAG system for end-to-end comparison.
 
-- [Prérequis](#prérequis)
-- [Installation de l'environnement](#installation-de-lenvironnement)
-- [Données nécessaires](#données-nécessaires)
-- [Structure du projet](#structure-du-projet)
-- [Configuration](#configuration)
-- [Lancer l'évaluation](#lancer-lévaluation)
-- [Visualisation des résultats](#visualisation-des-résultats)
+## Pipeline Architecture
+PDF ──► Page Images ──► Preprocessing ──► Geometric Segmentation ──► Semantic Classification ──► Reading Order ──► OCR ──► Markdown
 
----
+| Stage | Method | Key Technique |
+|-------|--------|---------------|
+| **1. PDF to Image** | Rendering at 300 DPI | `pdf2image` / `PyMuPDF` |
+| **2. Preprocessing** | Binarization, deskew, noise removal | Otsu/Sauvola, projection profile variance maximization |
+| **3a. Geometric Segmentation** | Hierarchical spatial clustering | Connected components → k-NN distance/angle distributions → KDE/GMM-based grouping at each level (characters → words → lines → blocks → columns) |
+| **3b. Semantic Classification** | Rule-based + lightweight statistical classifier | Features: font size ratios, position, aspect ratio, spacing — classified via decision tree or logistic regression |
+| **4. Reading Order** | Topological sort on spatial graph | Column-aware top-to-bottom, left-to-right ordering |
+| **5. OCR** | Tesseract (legacy mode) | Template matching + n-gram language model correction |
+| **6. Markdown Serialization** | Deterministic mapping | Label → Markdown syntax with heading level inference via clustering |
 
-## Prérequis
+### Geometric Segmentation Detail
 
-- **Python 3.10** ou **3.11**
-- **pip** (gestionnaire de paquets standard)
-- **Git**
+The core novelty lies in step 3a. At each grouping level, the same statistical principle applies:
 
----
+1. Compute pairwise distances between elements
+2. Model the distance distribution (KDE or GMM)
+3. Identify the valley between intra-group and inter-group distance modes
+4. Use the valley as an adaptive, document-specific threshold
+5. Group elements below the threshold
+Connected Components
+        │
+        ▼
+   k-NN distances + angles
+        │
+        ├── angle histogram ──► orientation detection
+        │
+        ├── horizontal distance distribution ──► word grouping (intra-word vs inter-word gap)
+        │
+        ├── vertical distance distribution ──► line grouping (intra-line vs inter-line gap)
+        │
+        └── block-level gap distribution ──► block grouping + column detection
 
-## Installation de l'environnement
+This approach is inspired by the **Docstrum algorithm** (O'Gorman, 1993) but extends it with explicit distribution modeling and a unified hierarchical framework.
 
-### 1. Cloner le dépôt
+## Project Structure
+statparse/
+├── src/
+│   ├── pdf_to_image/          # Step 1: PDF rendering
+│   ├── preprocessing/         # Step 2: Binarization, deskew, denoising
+│   ├── segmentation/          # Step 3a: Geometric segmentation
+│   ├── classification/        # Step 3b: Semantic classification
+│   ├── reading_order/         # Step 4: Block ordering
+│   ├── ocr/                   # Step 5: Tesseract integration
+│   ├── serialization/         # Step 6: Markdown output
+│   └── pipeline.py            # End-to-end pipeline
+├── baselines/
+│   └── docling_baseline.py    # Docling baseline wrapper
+├── evaluation/
+│   ├── benchmarks/            # Benchmark datasets and loaders
+│   ├── metrics.py             # Evaluation metrics
+│   └── compare.py             # StatParse vs Docling comparison
+├── rag/
+│   ├── chunking.py            # Document chunking strategies
+│   ├── retrieval.py           # Retrieval pipeline
+│   └── generation.py          # Generation with retrieved context
+├── notebooks/                 # Exploratory analysis and demos
+├── tests/                     # Unit tests per module
+├── docs/                      # Documentation and literature notes
+├── requirements.txt
+└── README.md
+
+## Installation
 
 ```bash
-git clone https://github.com/timthib/RAG_Statap_ENSAE_2025_Headminds.git
-cd RAG_Statap_ENSAE_2025_Headminds
-```
-
-### 2. Créer et activer un environnement virtuel
-
-Il est recommandé d'utiliser un environnement virtuel pour isoler les dépendances.
-
-```bash
-# Créer l'environnement (exemple avec venv)
-python -m venv .venv
-
-# Activer l'environnement
-# Sur Linux/Mac :
-source .venv/bin/activate
-# Sur Windows :
-.venv\Scripts\activate
-```
-
-### 3. Installer les dépendances
-
-Installez les paquets nécessaires listés dans `requirements.txt`. Cela inclut les outils de parsing, les métriques (TEDS, BLEU, etc.) et la logique de matching.
-
-```bash
+git clone https://github.com/<your-org>/statparse.git
+cd statparse
 pip install -r requirements.txt
-```
+Dependencies
+pdf2image>=1.16.3
+PyMuPDF>=1.23.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+pytesseract>=0.3.10
+matplotlib>=3.7.0
+System Requirements
+# Tesseract OCR engine
+sudo apt-get install tesseract-ocr    # Ubuntu/Debian
+brew install tesseract                  # macOS
 
-**Note :** Si votre modèle sort des tableaux spécifiquement au format **LaTeX** (nécessitant une conversion), vous pourriez avoir besoin d'installer [LaTeXML](https://math.nist.gov/~BMiller/LaTeXML/) séparément. Pour une sortie Markdown/HTML standard de Docling, les dépendances ci-dessus sont suffisantes.
+# Poppler (for pdf2image)
+sudo apt-get install poppler-utils     # Ubuntu/Debian
+brew install poppler                    # macOS
+No GPU required. StatParse runs entirely on CPU.
+Usage
+Basic
+from statparse import Pipeline
 
-> **Remarque pour les utilisateurs d’Onyxia**  
-> Si vous exécutez les scripts sur Onyxia, vous pouvez rencontrer l’erreur suivante lorsque vous essayer de lancer l'évaluation (expliquée ci-dessous):  
-> 
-> ```
-> ImportError: libGL.so.1: cannot open shared object file: No such file or directory
-> ```  
-> 
-> Cela se produit parce que OpenCV nécessite la bibliothèque système `libGL`.  
-> Pour résoudre ce problème, exécutez la commande suivante avant de lancer l’évaluation :  
-> 
-> ```bash
-> sudo apt-get update && sudo apt-get install -y libgl1
-> ```  
+pipeline = Pipeline()
+result = pipeline.parse("document.pdf")
 
+# Save as markdown
+with open("output.md", "w") as f:
+    f.write(result.to_markdown())
+Step-by-Step
+from statparse.pdf_to_image import render_pdf
+from statparse.preprocessing import preprocess
+from statparse.segmentation import segment
+from statparse.classification import classify
+from statparse.reading_order import order_blocks
+from statparse.ocr import recognize_text
+from statparse.serialization import to_markdown
 
----
+images = render_pdf("document.pdf", dpi=300)
 
-## Données nécessaires
-
- **Important :** Les fichiers de données brutes (images, PDFs, annotations OmniDocBench et les fichiers markdown générés par Docling) ne sont pas inclus dans ce dépôt GitHub en raison de leur taille importante.
-
-Pour faire fonctionner le script d'évaluation, vous devez télécharger ces données et les placer dans le dossier du projet.
-
-### Structure attendue
-
-Assurez-vous que votre dossier de travail ressemble à ceci avant de lancer l'évaluation. Les dossiers marqués d'un astérisque `*` sont ceux que vous devez créer ou remplir :
-
-```text
-RAG_Statap_ENSAE_2025_Headminds/
-├── configs/
-│   └── end2end.yaml            # Fichier de configuration (à vérifier)
-├── dataset/                    # Code de chargement des données
-├── images/ *                   # (À AJOUTER) Annotations de vérité terrain (GT)
-├── metrics/                    # Code de calcul des métriques
-├── pdfs/ *                     # (À AJOUTER) PDFs du benchmark
-├── registry/
-├── result/ *                   # Résultats de l'évaluation (JSONs)
-│   └── docling/ *              # (À AJOUTER Fichiers .md générés par Docling
-│   └── docling_quick_match_...
-│   └── docling_quick_match_...
-│   └── ...
-├── task/
-├── tools/
-│   └── generate_result_tables.ipynb  # Notebook pour visualiser les résultats
-├── utils/
-├── gitignore                   # Fichier .gitignore pour exclure les fichiers volumineux ou temporaires
-├── OmniDocBench.json           # [À AJOUTER] Annotations de vérité terrain (GT)
-├── pdf_validation.py           # Script principal d'évaluation
-├── requirements.txt            # Liste des dépendances Python nécessaires pour l'environnement
-└── README.md                   # Documentation et instructions pour installer, configurer et lancer l’évaluation
-```
-
----
-
-## Configuration
-
-Avant de lancer l'évaluation, vous devez vérifier et potentiellement modifier les chemins dans le fichier `configs/end2end.yaml`.
-
-La section critique se trouve sous `dataset` :
-
-```yaml
-dataset:
-  dataset_name: end2end_dataset
-  ground_truth:
-    # Chemin vers le fichier JSON de vérité terrain (OmniDocBench.json)
-    data_path: ./OmniDocBench.json
-  prediction:
-    # Chemin vers le dossier contenant les fichiers .md de Docling
-    data_path: ./result/docling
-  match_method: quick_match
-```
-
-*   **`ground_truth/data_path`** : Doit pointer vers votre fichier `OmniDocBench.json`.
-*   **`prediction/data_path`** : Doit pointer vers le dossier contenant vos résultats de prédiction (les fichiers `.md`).
-
----
-
-## Lancer l'évaluation
-
-Une fois l'environnement activé et la configuration vérifiée, lancez la commande suivante à la racine du dépôt :
-
-```bash
-python pdf_validation.py --config configs/end2end.yaml
-```
-
-Une barre de progression (`tqdm`) apparaîtra pour indiquer le traitement des pages.
-
----
-
-## Visualisation des résultats
-
-Les fichiers JSON résultants de l'évaluation (contenant les scores Edit Distance, TEDS, CDM, etc.) sont déjà inclus dans ce dépôt GitHub.
-
-Pour analyser et visualiser ces résultats sous forme de tableaux de bord :
-
-1.  Assurez-vous d'avoir **Jupyter** installé (`pip install jupyter`) ou utilisez VS Code avec l'extension Jupyter.
-2.  Ouvrez le notebook situé dans le dossier outils :
-    ```bash
-    jupyter notebook tools/generate_result_tables.ipynb
-    ```
-3.  Exécutez les cellules du notebook pour générer les tableaux de scores finaux.
-
-# Documents
-
-## Veille scientifique 
-HF : https://huggingface.co/papers/trending  #replaced paperswithcode
-Arxiv : https://arxiv.org
-Google scholar
-
-- Connaissance globale LLM https://datascientest.com/large-language-models-tout-savoir
-- Détail sur le fonctionnement des Transformers https://arxiv.org/pdf/1706.03762
-- Présentation RAG https://arxiv.org/pdf/2410.12837
-- Discussion sur le chunking de documents https://medium.com/@alexisperrier/dans-le-rag-limportant-c-est-le-chunk-0d541b4f4bbe
-- Cours sur l'utilisation de modèles https://huggingface.co/learn/llm-course/chapter1/1
-- Prise en main LangChain https://docs.langchain.com/oss/python/langchain/overview
+for page_image in images:
+    clean = preprocess(page_image)
+    blocks = segment(clean)
+    labeled_blocks = classify(blocks)
+    ordered_blocks = order_blocks(labeled_blocks)
+    text_blocks = recognize_text(ordered_blocks, page_image)
+    markdown = to_markdown(text_blocks)
+Evaluation
+Benchmarks
+We evaluate on:
+Copier le tableau
 
 
+Benchmark
+Task
+Reference
+
+
+
+PRImA Layout Analysis
+Layout segmentation
+Antonacopoulos et al., ICDAR 2009
+
+
+DocLayNet
+Document layout analysis
+Pfitzmann et al., KDD 2022
+
+
+PubLayNet
+Scientific document layout
+Zhong et al., ICDAR 2019
+
+
+Metrics
+Copier le tableau
+
+
+Metric
+What it measures
+
+
+
+IoU (Intersection over Union)
+Geometric segmentation accuracy
+
+
+mAP@0.5 / mAP@0.75
+Detection quality at different overlap thresholds
+
+
+Block classification accuracy
+Semantic label correctness
+
+
+Reading order Kendall's τ
+Ordering quality vs ground truth
+
+
+Levenshtein / BLEU on Markdown
+End-to-end output quality
+
+
+Running Evaluation
+# Run StatParse on benchmark
+python evaluation/compare.py --method statparse --dataset prima
+
+# Run Docling baseline
+python evaluation/compare.py --method docling --dataset prima
+
+# Compare results
+python evaluation/compare.py --compare statparse docling --dataset prima
+Roadmap
+
+ Literature review and pipeline design
+ Implement Docling baseline and compute baseline metrics
+ Implement preprocessing (binarization, deskew, denoising)
+ Implement geometric segmentation (connected components + hierarchical grouping)
+ Implement semantic classification
+ Implement reading order
+ Integrate Tesseract OCR
+ Implement Markdown serialization
+ Benchmark StatParse vs Docling on layout analysis
+ Integrate both methods into a RAG system
+ End-to-end RAG evaluation (parsing → retrieval → generation)
+ Write and submit paper
+
+Key References
+Copier le tableau
+
+
+Paper
+Relevance
+
+
+
+O'Gorman, "The Document Spectrum for Page Layout Analysis," IEEE TPAMI, 1993. DOI
+Core method: k-NN distance/angle distributions for layout analysis
+
+
+Ha, Haralick & Phillips, "Recursive X-Y Cut," ICDAR, 1995. DOI
+Hierarchical top-down segmentation
+
+
+Wong, Casey & Wahl, "Document Analysis System," IBM JRD, 1982. DOI
+RLSA and projection profiles
+
+
+Breuel, "Two Geometric Algorithms for Layout Analysis," DAS, 2002. DOI
+Whitespace-based segmentation
+
+
+Kise, Sato & Iwata, "Segmentation Using Area Voronoi Diagram," CVIU, 1998. DOI
+Voronoi-based approach for complex layouts
+
+
+Binmakhashen & Mahmoud, "Document Layout Analysis: A Comprehensive Survey," ACM CSUR, 2019. DOI
+Modern survey covering classical and DL methods
+
+
+Mao, Rosenfeld & Kanungo, "Document Structure Analysis Algorithms: A Literature Survey," SPIE, 2003. DOI
+Foundational survey
+
+
+Auer et al., "Docling Technical Report," arXiv, 2024. arXiv
+Our baseline system
+
+
+Contributing
+This is an academic research project. If you want to contribute:
+
+Fork the repository
+Create a feature branch (git checkout -b feature/step-3a-segmentation)
+Write tests for your module
+Submit a pull request with a description of what you implemented and why
+
+Please follow the module structure. Each pipeline step is an independent module with clear input/output contracts.
+License
+MIT License. See LICENSE for details.
+Acknowledgments
+This project is conducted as part of a student research initiative exploring lightweight statistical alternatives to deep learning for document understanding in RAG systems.
