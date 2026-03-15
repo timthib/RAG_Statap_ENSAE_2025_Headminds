@@ -1,6 +1,7 @@
 """Step 2: Image preprocessing — binarization, deskew, denoising."""
 import numpy as np
-
+from PIL import Image
+import cv2
 
 def preprocess(image: np.ndarray) -> np.ndarray:
     """Take an RGB page image, return a cleaned binary image.
@@ -8,16 +9,17 @@ def preprocess(image: np.ndarray) -> np.ndarray:
     Steps:
         1. Convert to grayscale
         2. Binarize (Otsu or Sauvola thresholding)
-        3. Deskew (projection profile variance maximization)
-        4. Denoise (morphological operations)
+        3. Deskew (projection profile variance maximization) Avec OpenCV pour avoir des prmeiers résultats
+        4. Denoise (morphological operations) J'obtiens pour l'insant de meilleurs résultats sans denoise sur les textes 
+        de Omnidobench qui sont très lisibles, je décide donc d'omettre cette étape dans la fonction preprocess
     """
     
     gray = convertgrayscale(image)
-    #1. grayscale
     binarizer = SauvolaBinarizer()
-    #2. binarizer
+
     binary = binarizer.binarize(gray)
-    raise NotImplementedError
+    img = deskew(binary)
+    return img
 
 
 def convertgrayscale(image:np.ndarray) -> np.ndarray:
@@ -91,3 +93,45 @@ class SauvolaBinarizer:
         T = mean * (1 + self.k * (std / self.R - 1))
         binary = np.where(image < T, 0, 255).astype(np.uint8)
         return binary
+
+
+
+def deskew(image: np.ndarray) -> np.ndarray:
+    coords = np.column_stack(np.where(image > 0))
+    angle = cv2.minAreaRect(coords)[-1]
+
+    if angle < -45:
+        angle = -(90 + angle)
+    else:
+        angle = -angle
+
+    (h, w) = image.shape[:2]
+    center = (w // 2, h // 2)
+
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    rotated = cv2.warpAffine(
+        image,
+        M,
+        (w, h),
+        flags=cv2.INTER_CUBIC,
+        borderMode=cv2.BORDER_REPLICATE
+    )
+
+    return rotated
+
+
+def morph(image: np.ndarray) -> np.ndarray:
+    kernel = np.ones((2,2), np.uint8)
+    img = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+    img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(img)
+    min_area = 10
+    for i in range(1, num_labels):
+        if stats[i, cv2.CC_STAT_AREA] < min_area:
+            img[labels == i] = 0
+    return img
+
+
+
+
